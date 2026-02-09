@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simulador de Costos de Cámaras de Seguridad V2.0</title>
+    <title>Simulador de Costos de Cámaras de Seguridad V2.1</title>
     <style>
         body {
             font-family: sans-serif;
@@ -66,17 +66,17 @@
         .text-label { font-size: 12px; font-family: sans-serif; fill: #000; }
         .dvr-label { font-size: 10px; font-weight: bold; }
         .camera-icon { font-size: 20px; cursor: grab; }
-        .camera-label { font-size: 14px; font-weight: bold; fill: #000; }
+        .camera-label { font-size: 14px; font-weight: bold; fill: #cc0000; }
         .vision-cone { fill: #03a9f4; fill-opacity: 0.4; stroke: #0288d1; stroke-width: 1; }
     </style>
 </head>
 <body>
-    <h1>Simulador de Cámaras - Primaria Frida Kahlo (V2.0)</h1>
+    <h1>Simulador de Cámaras - Primaria Frida Kahlo (V2.1)</h1>
     <div id="container">
         <div id="svg-container">
             <svg id="plano-escuela" width="100%" viewBox="0 0 1000 650">
                 <!-- Perímetro Corregido (Basado en foto satelital) -->
-                <polygon class="perimeter" points="150,50 900,150 800,600 100,500 150,50" />
+                <polygon class="perimeter" points="150,50 900,150 800,600 100,500" />
 
                 <!-- Edificios y Áreas (Ajustados al nuevo perímetro) -->
                 <rect x="550" y="200" width="247" height="119" class="building" />
@@ -169,31 +169,25 @@
             const svg = document.getElementById('plano-escuela');
             const group = document.getElementById('cameras-group');
             const visionAngle = 110; // 110 grados
-            const visionRadius = 200; // 200 unidades SVG ~ 20 mts
+            const visionRadius = 150; // Ajustado para una mejor visualización
 
-            // Función para convertir de grados a radianes
             const toRadians = (degrees) => degrees * Math.PI / 180;
 
             cameras.forEach(cam => {
-                // Crear el grupo para cada cámara
                 const camGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g' );
 
-                // Crear el cono de visión
                 const cone = document.createElementNS('http://www.w3.org/2000/svg', 'path' );
                 const startAngle = toRadians(cam.angle - visionAngle / 2);
                 const endAngle = toRadians(cam.angle + visionAngle / 2);
-
                 const x1 = cam.x + visionRadius * Math.cos(startAngle);
                 const y1 = cam.y + visionRadius * Math.sin(startAngle);
                 const x2 = cam.x + visionRadius * Math.cos(endAngle);
                 const y2 = cam.y + visionRadius * Math.sin(endAngle);
-
                 const d = `M ${cam.x} ${cam.y} L ${x1} ${y1} A ${visionRadius} ${visionRadius} 0 0 1 ${x2} ${y2} Z`;
                 cone.setAttribute('d', d);
                 cone.setAttribute('class', 'vision-cone');
                 camGroup.appendChild(cone);
 
-                // Crear el icono de la cámara
                 const icon = document.createElementNS('http://www.w3.org/2000/svg', 'text' );
                 icon.setAttribute('x', cam.x);
                 icon.setAttribute('y', cam.y);
@@ -203,10 +197,10 @@
                 icon.textContent = '🎥';
                 camGroup.appendChild(icon);
 
-                // Crear la etiqueta con el número
+                // CORRECCIÓN: Ajuste de la posición de la etiqueta del número
                 const label = document.createElementNS('http://www.w3.org/2000/svg', 'text' );
-                label.setAttribute('x', cam.x + 15);
-                label.setAttribute('y', cam.y - 15);
+                label.setAttribute('x', cam.x + 20); // Movido 20px a la derecha
+                label.setAttribute('y', cam.y - 20); // Movido 20px hacia arriba
                 label.setAttribute('class', 'camera-label');
                 label.textContent = cam.id;
                 camGroup.appendChild(label);
@@ -217,4 +211,3 @@
     </script>
 </body>
 </html>
-
