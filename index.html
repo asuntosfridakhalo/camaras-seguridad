@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simulador de Costos de Cámaras de Seguridad V6.0</title>
+    <title>Simulador de Costos de Cámaras de Seguridad V7.0</title>
     <style>
         body { font-family: sans-serif; display: flex; flex-direction: column; align-items: center; background-color: #f0f2f5; margin: 0; padding: 20px; }
         h1, h2 { color: #333; text-align: center; }
@@ -39,7 +39,7 @@
     </style>
 </head>
 <body>
-    <h1>Simulador Interactivo de Cámaras (V6.0)</h1>
+    <h1>Simulador Interactivo de Cámaras (V7.0)</h1>
     <div id="controls-container">
         <button id="add-wired-cam">Añadir Alámbrica (🎥)</button>
         <button id="add-wireless-cam">Añadir Inalámbrica (📡)</button>
@@ -47,16 +47,26 @@
     <div id="main-container">
         <div id="svg-container">
             <svg id="plano-escuela" width="100%" viewBox="0 0 1000 650">
-                <polygon class="perimeter" points="100,100 900,50 950,550 150,600" />
+                <!-- Perímetro Ajustado (Más Angosto) -->
+                <polygon class="perimeter" points="100,150 900,100 950,500 150,550" />
                 <g id="school-layout">
-                    <rect x="590" y="150" width="247" height="119" class="building" /><text x="650" y="200" class="text-label">Edificio Director</text>
-                    <text x="610" y="220" class="dvr-label">DVR</text>
-                    <rect x="550" y="330" width="255" height="111" class="building" /><text x="610" y="370" class="text-label">Edificio Secretaria</text>
-                    <rect x="390" y="170" width="150" height="120" class="patio" /><text x="440" y="230" class="text-label">Patios</text>
-                    <rect x="330" y="320" width="180" height="100" class="cancha" /><text x="380" y="370" class="text-label">Cancha</text>
-                    <rect x="200" y="480" width="60" height="40" class="bodeguita" /><text x="205" y="505" class="text-label">Bodeguita</text>
-                    <rect x="850" y="80" width="40" height="40" class="cooperativa" /><text x="840" y="135" class="text-label">Acceso</text>
-                    <polygon class="cooperativa" points="890,480 930,530 870,540" /><text x="860" y="560" class="text-label">Cooperativa</text>
+                    <!-- Edificios y Áreas Reubicados -->
+                    <rect x="500" y="180" width="247" height="100" class="building" /><text x="560" y="220" class="text-label">Edificio Director</text>
+                    <text x="520" y="240" class="dvr-label">DVR</text>
+                    
+                    <rect x="500" y="320" width="247" height="100" class="building" /><text x="560" y="360" class="text-label">Edificio Secretaria</text>
+                    
+                    <rect x="300" y="190" width="150" height="100" class="patio" /><text x="350" y="240" class="text-label">Patios</text>
+                    
+                    <rect x="300" y="310" width="150" height="90" class="cancha" /><text x="350" y="355" class="text-label">Cancha</text>
+                    
+                    <rect x="180" y="430" width="60" height="40" class="bodeguita" /><text x="185" y="455" class="text-label">Bodeguita</text>
+                    
+                    <!-- Acceso Reubicado -->
+                    <rect x="780" y="250" width="40" height="40" class="cooperativa" /><text x="770" y="305" class="text-label">Acceso</text>
+                    
+                    <!-- Cooperativa Reubicada -->
+                    <polygon class="cooperativa" points="890,430 930,480 870,490" /><text x="860" y="510" class="text-label">Cooperativa</text>
                 </g>
                 <g id="cables-group"></g>
                 <g id="cameras-group"></g>
@@ -94,7 +104,7 @@
 
         let cameras = [];
         let nextCamId = 1;
-        const DVR_POSITION = { x: 610, y: 220 };
+        const DVR_POSITION = { x: 520, y: 240 }; // Posición actualizada del DVR
         const PIXELS_TO_METERS = 0.1;
         const CABLE_IN_KIT = 18;
         const COSTS = { kitBase: 3500, wiredCam: 500, wirelessCam: 750, cablePerMeter: 8.20, connectorsPerCam: 100, powerAdapter: 150, powerSupply: 850, laborPerCam: 750, setup: 1000 };
@@ -149,12 +159,16 @@
         svg.addEventListener('mouseleave', endDrag);
 
         document.addEventListener('keydown', (evt) => {
-            if (evt.key.toLowerCase() === 'r') {
-                const hovered = document.querySelector('.camera-group:hover');
-                if (hovered && !rotatingElement) {
-                    rotatingElement = hovered;
-                    rotatingElement.classList.add('rotating');
-                }
+            const key = evt.key.toLowerCase();
+            const hovered = document.querySelector('.camera-group:hover');
+
+            if (key === 'r' && hovered && !rotatingElement) {
+                rotatingElement = hovered;
+                rotatingElement.classList.add('rotating');
+            } else if ((key === 'delete' || key === 'backspace' || key === 'supr') && hovered) {
+                const camId = parseInt(hovered.dataset.id);
+                cameras = cameras.filter(c => c.id !== camId);
+                render();
             }
         });
 
@@ -266,8 +280,8 @@
             document.getElementById('breakdown-list').innerHTML = breakdownHTML;
         };
 
-        addCamera('wired', 850, 100);
-        addCamera('wired', 125, 580);
+        addCamera('wired', 800, 120);
+        addCamera('wired', 125, 530);
     });
     </script>
 </body>
