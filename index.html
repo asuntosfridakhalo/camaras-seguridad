@@ -3,20 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simulador de Costos de Cámaras de Seguridad V3.0</title>
+    <title>Simulador de Costos de Cámaras de Seguridad V4.0</title>
     <style>
         body { font-family: sans-serif; display: flex; flex-direction: column; align-items: center; background-color: #f0f2f5; margin: 0; padding: 20px; }
         h1, h2 { color: #333; text-align: center; }
         #main-container { display: flex; flex-wrap: wrap; justify-content: center; gap: 20px; width: 100%; max-width: 1600px; }
-        #controls-container { flex-basis: 100%; text-align: center; margin-bottom: 10px; }
-        #controls-container button { background-color: #4CAF50; color: white; border: none; padding: 10px 20px; font-size: 16px; cursor: pointer; border-radius: 5px; margin: 0 10px; }
-        #controls-container button:hover { background-color: #45a049; }
+        #controls-container { flex-basis: 100%; text-align: center; margin-bottom: 10px; background-color: #fff; padding: 15px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        #controls-container button { background-color: #007bff; color: white; border: none; padding: 10px 20px; font-size: 16px; cursor: pointer; border-radius: 5px; margin: 0 10px; }
+        #controls-container button:hover { background-color: #0056b3; }
         #svg-container { border: 1px solid #ccc; background-color: #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.1); flex-basis: 65%; min-width: 600px; }
         #info-container { flex-basis: 30%; min-width: 350px; background-color: #fff; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border-radius: 8px; }
         table { width: 100%; border-collapse: collapse; margin-top: 15px; }
         th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 14px; }
         th { background-color: #f2f2f2; }
         tfoot td { font-weight: bold; font-size: 16px; color: #d32f2f; }
+        #cable-breakdown { margin-top: 15px; font-size: 12px; }
+        #cable-breakdown h3 { margin-bottom: 5px; }
+        #cable-breakdown div { padding: 2px 0; }
         .building { fill: #ff9800; stroke: #c66900; stroke-width: 1; }
         .patio { fill: #9e9e9e; stroke: #707070; stroke-width: 1; }
         .cancha { fill: #bdbdbd; stroke: #8d8d8d; stroke-width: 1; }
@@ -24,109 +27,88 @@
         .bodeguita { fill: #ff9800; stroke: #c66900; opacity: 0.7;}
         .perimeter { fill: #f5f5f5; stroke: #333; stroke-width: 2; }
         .text-label { font-size: 12px; font-family: sans-serif; fill: #000; pointer-events: none; }
-        .dvr-label { font-size: 12px; font-weight: bold; fill: #c0392b; }
+        .dvr-label { font-size: 14px; font-weight: bold; fill: #c0392b; }
         .camera-group.dragging { opacity: 0.7; }
         .camera-icon { font-size: 24px; cursor: grab; text-anchor: middle; dominant-baseline: middle; }
         .camera-icon:active { cursor: grabbing; }
         .camera-label { font-size: 14px; font-weight: bold; fill: #cc0000; pointer-events: none; }
         .vision-cone { fill: #03a9f4; fill-opacity: 0.4; stroke: #0288d1; stroke-width: 1; pointer-events: none; }
+        .cable-line { stroke: #d32f2f; stroke-width: 1.5; stroke-dasharray: 5,5; pointer-events: none; }
+        .cable-label { font-size: 12px; fill: #d32f2f; font-weight: bold; pointer-events: none; }
     </style>
 </head>
 <body>
-    <h1>Simulador Interactivo de Cámaras (V3.0)</h1>
+    <h1>Simulador Interactivo de Cámaras (V4.0)</h1>
     <div id="controls-container">
-        <button id="add-wired-cam">Añadir Cámara Alámbrica (🎥)</button>
-        <button id="add-wireless-cam">Añadir Cámara Inalámbrica (📡)</button>
+        <button id="add-wired-cam">Añadir Alámbrica (🎥)</button>
+        <button id="add-wireless-cam">Añadir Inalámbrica (📡)</button>
     </div>
     <div id="main-container">
         <div id="svg-container">
             <svg id="plano-escuela" width="100%" viewBox="0 0 1000 650">
-                <!-- Perímetro Corregido Definitivo -->
-                <polygon class="perimeter" points="150,50 500,20 900,150 800,600 100,500" />
+                <!-- Perímetro Corregido Definitivo (5 Vértices) -->
+                <polygon class="perimeter" points="150,100 500,50 950,150 800,600 100,500" />
 
-                <!-- Edificios y Áreas -->
-                <rect x="550" y="200" width="247" height="119" class="building" />
-                <text x="610" y="250" class="text-label">Edificio de aulas y</text>
-                <text x="610" y="265" class="text-label">oficina del director</text>
-                <text x="570" y="270" class="dvr-label">DVR</text>
+                <!-- Edificios y Áreas Reubicados -->
+                <rect x="550,200" width="247" height="119" class="building" /><text x="610,250" class="text-label">Edificio Director</text>
+                <text x="570,270" class="dvr-label">DVR</text>
+                <rect x="500,380" width="255" height="111" class="building" /><text x="560,420" class="text-label">Edificio Secretaria</text>
+                <rect x="350,220" width="150" height="120" class="patio" /><text x="400,280" class="text-label">Patios</text>
+                <rect x="250,350" width="180" height="100" class="cancha" /><text x="280,390" class="text-label">Cancha</text>
+                <rect x="150,400" width="60" height="40" class="bodeguita" /><text x="155,425" class="text-label">Bodeguita</text>
+                <rect x="900,160" width="40" height="40" class="cooperativa" /><text x="910,215" class="text-label">Acceso</text>
+                <polygon class="cooperativa" points="760,500 800,550 740,560" /><text x="730,580" class="text-label">Cooperativa</text>
 
-                <rect x="500" y="380" width="255" height="111" class="building" />
-                <text x="560" y="420" class="text-label">Edificio de aulas y</text>
-                <text x="560" y="435" class="text-label">oficina de la secretaria</text>
-                
-                <rect x="350" y="220" width="150" height="120" class="patio" /><text x="400" y="280" class="text-label">Patios</text>
-                <rect x="250" y="350" width="180" height="100" class="cancha" /><text x="280" y="390" class="text-label">Cancha</text>
-                <rect x="150" y="400" width="60" height="40" class="bodeguita" /><text x="155" y="425" class="text-label">Bodeguita</text>
-                <rect x="850" y="160" width="40" height="40" class="cooperativa" /><text x="860" y="215" class="text-label">Acceso</text>
-                
-                <!-- Cooperativa Triangular -->
-                <polygon class="cooperativa" points="760,500 800,550 740,560" /><text x="730" y="580" class="text-label">Cooperativa</text>
-
+                <g id="cables-group"></g>
                 <g id="cameras-group"></g>
             </svg>
         </div>
         <div id="info-container">
             <h2>Estimación de Presupuesto</h2>
             <table id="costs-table">
-                <thead>
-                    <tr><th>Concepto</th><th>Costo (MXN)</th></tr>
-                </thead>
+                <thead><tr><th>Concepto</th><th>Costo (MXN)</th></tr></thead>
                 <tbody>
-                    <tr><td>Kit Base (DVR, HDD 1TB)</td><td id="cost-kit-base">$3,500</td></tr>
-                    <tr><td>Cámaras Alámbricas</td><td id="cost-wired-cams">$0</td></tr>
-                    <tr><td>Cámaras Inalámbricas</td><td id="cost-wireless-cams">$0</td></tr>
-                    <tr><td>Cable Adicional (Metros)</td><td id="cost-cable">$0</td></tr>
-                    <tr><td>Conectores (BNC y DC)</td><td id="cost-connectors">$0</td></tr>
-                    <tr><td>Eliminadores (Inalámbricas)</td><td id="cost-power-adapters">$0</td></tr>
-                    <tr><td>Fuente de Poder Centralizada</td><td id="cost-power-supply">$850</td></tr>
-                    <tr><td>Instalación y Mano de Obra</td><td id="cost-labor">$0</td></tr>
-                    <tr><td>Configuración Inicial</td><td id="cost-setup">$1,000</td></tr>
+                    <tr><td>Kit Base (DVR, HDD 1TB)</td><td id="cost-kit-base"></td></tr>
+                    <tr><td>Cámaras Alámbricas</td><td id="cost-wired-cams"></td></tr>
+                    <tr><td>Cámaras Inalámbricas</td><td id="cost-wireless-cams"></td></tr>
+                    <tr><td>Cable Adicional (Metros)</td><td id="cost-cable"></td></tr>
+                    <tr><td>Conectores (BNC y DC)</td><td id="cost-connectors"></td></tr>
+                    <tr><td>Eliminadores (Inalámbricas)</td><td id="cost-power-adapters"></td></tr>
+                    <tr><td>Fuente de Poder Centralizada</td><td id="cost-power-supply"></td></tr>
+                    <tr><td>Instalación y Mano de Obra</td><td id="cost-labor"></td></tr>
+                    <tr><td>Configuración Inicial</td><td id="cost-setup"></td></tr>
                 </tbody>
-                <tfoot>
-                    <tr><td>TOTAL ESTIMADO</td><td id="cost-total">$0</td></tr>
-                </tfoot>
+                <tfoot><tr><td>TOTAL ESTIMADO</td><td id="cost-total"></td></tr></tfoot>
             </table>
+            <div id="cable-breakdown">
+                <h3>Desglose de Cableado por Cámara</h3>
+                <div id="breakdown-list"></div>
+            </div>
         </div>
     </div>
 
     <script>
     document.addEventListener('DOMContentLoaded', () => {
         const svg = document.getElementById('plano-escuela');
-        const group = document.getElementById('cameras-group');
-        const svgPoint = svg.createSVGPoint();
+        const camerasGroup = document.getElementById('cameras-group');
+        const cablesGroup = document.getElementById('cables-group');
 
-        // --- DATOS Y COSTOS BASE ---
         let cameras = [];
         let nextCamId = 1;
         const DVR_POSITION = { x: 570, y: 270 };
-        const PIXELS_TO_METERS = 0.1; // Factor de conversión: 10px = 1 metro
-        const CABLE_IN_KIT = 18; // Metros de cable por cámara en el kit
+        const PIXELS_TO_METERS = 0.1;
+        const CABLE_IN_KIT = 18;
 
-        const COSTS = {
-            kitBase: 3500,
-            wiredCam: 500,
-            wirelessCam: 750,
-            cablePerMeter: 8.20,
-            connectorsPerCam: 100,
-            powerAdapter: 150,
-            powerSupply: 850,
-            laborPerCam: 750,
-            setup: 1000
+        const COSTS = { kitBase: 3500, wiredCam: 500, wirelessCam: 750, cablePerMeter: 8.20, connectorsPerCam: 100, powerAdapter: 150, powerSupply: 850, laborPerCam: 750, setup: 1000 };
+
+        let selectedElement = null, offset;
+
+        const getMousePosition = (evt) => {
+            const CTM = svg.getScreenCTM();
+            return { x: (evt.clientX - CTM.e) / CTM.a, y: (evt.clientY - CTM.f) / CTM.d };
         };
 
-        // --- LÓGICA DE DRAG AND DROP ---
-        let selectedElement = null;
-        let offset;
-
-        function getMousePosition(evt) {
-            const CTM = svg.getScreenCTM();
-            return {
-                x: (evt.clientX - CTM.e) / CTM.a,
-                y: (evt.clientY - CTM.f) / CTM.d
-            };
-        }
-
-        function startDrag(evt) {
+        const startDrag = (evt) => {
             if (evt.target.classList.contains('camera-icon')) {
                 selectedElement = evt.target.parentNode;
                 selectedElement.classList.add('dragging');
@@ -135,70 +117,53 @@
                 offset.x -= camData.x;
                 offset.y -= camData.y;
             }
-        }
+        };
 
-        function drag(evt) {
+        const drag = (evt) => {
             if (selectedElement) {
                 evt.preventDefault();
                 const coord = getMousePosition(evt);
-                const newX = coord.x - offset.x;
-                const newY = coord.y - offset.y;
-                
                 const camData = cameras.find(c => c.id == selectedElement.dataset.id);
-                camData.x = newX;
-                camData.y = newY;
-                
-                renderCameras();
+                camData.x = coord.x - offset.x;
+                camData.y = coord.y - offset.y;
+                render();
             }
-        }
+        };
 
-        function endDrag(evt) {
+        const endDrag = () => {
             if (selectedElement) {
                 selectedElement.classList.remove('dragging');
                 selectedElement = null;
-                updateCosts();
             }
-        }
+        };
 
         svg.addEventListener('mousedown', startDrag);
         svg.addEventListener('mousemove', drag);
         svg.addEventListener('mouseup', endDrag);
         svg.addEventListener('mouseleave', endDrag);
 
-        // --- LÓGICA DE CÁMARAS Y RENDERIZADO ---
-        function addCamera(type) {
-            const newCam = {
-                id: nextCamId++,
-                type: type,
-                x: 200 + (nextCamId * 20),
-                y: 100,
-                angle: 0
-            };
-            cameras.push(newCam);
-            renderCameras();
-            updateCosts();
-        }
+        const addCamera = (type) => {
+            cameras.push({ id: nextCamId++, type, x: 200 + (nextCamId * 20), y: 100, angle: 0 });
+            render();
+        };
 
         document.getElementById('add-wired-cam').addEventListener('click', () => addCamera('wired'));
         document.getElementById('add-wireless-cam').addEventListener('click', () => addCamera('wireless'));
 
-        function renderCameras() {
-            group.innerHTML = ''; // Limpiar antes de volver a dibujar
-            const visionAngle = 110;
-            const visionRadius = 150;
-            const toRadians = (degrees) => degrees * Math.PI / 180;
+        const render = () => {
+            camerasGroup.innerHTML = '';
+            cablesGroup.innerHTML = '';
+            const visionAngle = 110, visionRadius = 150;
+            const toRadians = (d) => d * Math.PI / 180;
 
             cameras.forEach(cam => {
                 const camGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g' );
                 camGroup.setAttribute('class', 'camera-group');
                 camGroup.dataset.id = cam.id;
 
-                const startAngle = toRadians(cam.angle - visionAngle / 2);
-                const endAngle = toRadians(cam.angle + visionAngle / 2);
-                const x1 = cam.x + visionRadius * Math.cos(startAngle);
-                const y1 = cam.y + visionRadius * Math.sin(startAngle);
-                const x2 = cam.x + visionRadius * Math.cos(endAngle);
-                const y2 = cam.y + visionRadius * Math.sin(endAngle);
+                const [sa, ea] = [toRadians(cam.angle - visionAngle / 2), toRadians(cam.angle + visionAngle / 2)];
+                const [x1, y1] = [cam.x + visionRadius * Math.cos(sa), cam.y + visionRadius * Math.sin(sa)];
+                const [x2, y2] = [cam.x + visionRadius * Math.cos(ea), cam.y + visionRadius * Math.sin(ea)];
 
                 const cone = document.createElementNS('http://www.w3.org/2000/svg', 'path' );
                 cone.setAttribute('d', `M ${cam.x} ${cam.y} L ${x1} ${y1} A ${visionRadius} ${visionRadius} 0 0 1 ${x2} ${y2} Z`);
@@ -218,57 +183,68 @@
                 label.setAttribute('class', 'camera-label');
                 label.textContent = cam.id;
                 camGroup.appendChild(label);
-                
-                group.appendChild(camGroup);
-            });
-        }
+                camerasGroup.appendChild(camGroup);
 
-        // --- LÓGICA DE CÁLCULO DE COSTOS ---
-        function updateCosts() {
-            let totalWiredCamsCost = 0;
-            let totalWirelessCamsCost = 0;
-            let totalExtraCableMeters = 0;
-            let wiredCamCount = 0;
-            let wirelessCamCount = 0;
+                if (cam.type === 'wired') {
+                    const cableLine = document.createElementNS('http://www.w3.org/2000/svg', 'line' );
+                    cableLine.setAttribute('x1', cam.x);
+                    cableLine.setAttribute('y1', cam.y);
+                    cableLine.setAttribute('x2', DVR_POSITION.x);
+                    cableLine.setAttribute('y2', DVR_POSITION.y);
+                    cableLine.setAttribute('class', 'cable-line');
+                    cablesGroup.appendChild(cableLine);
+
+                    const distanceInMeters = Math.sqrt(Math.pow(cam.x - DVR_POSITION.x, 2) + Math.pow(cam.y - DVR_POSITION.y, 2)) * PIXELS_TO_METERS;
+                    const cableLabel = document.createElementNS('http://www.w3.org/2000/svg', 'text' );
+                    cableLabel.setAttribute('x', (cam.x + DVR_POSITION.x) / 2);
+                    cableLabel.setAttribute('y', (cam.y + DVR_POSITION.y) / 2);
+                    cableLabel.setAttribute('class', 'cable-label');
+                    cableLabel.textContent = `${distanceInMeters.toFixed(1)}m`;
+                    cablesGroup.appendChild(cableLabel);
+                }
+            });
+            updateCosts();
+        };
+
+        const updateCosts = () => {
+            let wiredCamsCost = 0, wirelessCamsCost = 0, extraCableMeters = 0;
+            let wiredCamCount = 0, wirelessCamCount = 0;
+            let breakdownHTML = '';
 
             cameras.forEach(cam => {
                 if (cam.type === 'wired') {
                     wiredCamCount++;
-                    totalWiredCamsCost += COSTS.wiredCam;
-                    const distanceInPixels = Math.sqrt(Math.pow(cam.x - DVR_POSITION.x, 2) + Math.pow(cam.y - DVR_POSITION.y, 2));
-                    const distanceInMeters = distanceInPixels * PIXELS_TO_METERS;
-                    const extraCable = Math.max(0, distanceInMeters - CABLE_IN_KIT);
-                    totalExtraCableMeters += extraCable;
-                } else { // wireless
+                    wiredCamsCost += COSTS.wiredCam;
+                    const distanceInMeters = Math.sqrt(Math.pow(cam.x - DVR_POSITION.x, 2) + Math.pow(cam.y - DVR_POSITION.y, 2)) * PIXELS_TO_METERS;
+                    extraCableMeters += Math.max(0, distanceInMeters - CABLE_IN_KIT);
+                    breakdownHTML += `<div>Cámara #${cam.id} (🎥): ${distanceInMeters.toFixed(1)} metros</div>`;
+                } else {
                     wirelessCamCount++;
-                    totalWirelessCamsCost += COSTS.wirelessCam;
+                    wirelessCamsCost += COSTS.wirelessCam;
                 }
             });
 
-            const cableCost = totalExtraCableMeters * COSTS.cablePerMeter;
+            const cableCost = extraCableMeters * COSTS.cablePerMeter;
             const connectorsCost = wiredCamCount * COSTS.connectorsPerCam;
             const powerAdaptersCost = wirelessCamCount * COSTS.powerAdapter;
             const laborCost = (wiredCamCount + wirelessCamCount) * COSTS.laborPerCam;
-            
-            const totalCost = COSTS.kitBase + totalWiredCamsCost + totalWirelessCamsCost + cableCost + connectorsCost + powerAdaptersCost + COSTS.powerSupply + laborCost + COSTS.setup;
+            const totalCost = COSTS.kitBase + wiredCamsCost + wirelessCamsCost + cableCost + connectorsCost + powerAdaptersCost + COSTS.powerSupply + laborCost + COSTS.setup;
 
-            // Actualizar la tabla
             document.getElementById('cost-kit-base').textContent = `$${COSTS.kitBase.toFixed(2)}`;
-            document.getElementById('cost-wired-cams').textContent = `$${totalWiredCamsCost.toFixed(2)} (${wiredCamCount} uds)`;
-            document.getElementById('cost-wireless-cams').textContent = `$${totalWirelessCamsCost.toFixed(2)} (${wirelessCamCount} uds)`;
-            document.getElementById('cost-cable').textContent = `$${cableCost.toFixed(2)} (${totalExtraCableMeters.toFixed(0)} mts)`;
+            document.getElementById('cost-wired-cams').textContent = `$${wiredCamsCost.toFixed(2)} (${wiredCamCount} uds)`;
+            document.getElementById('cost-wireless-cams').textContent = `$${wirelessCamsCost.toFixed(2)} (${wirelessCamCount} uds)`;
+            document.getElementById('cost-cable').textContent = `$${cableCost.toFixed(2)} (${extraCableMeters.toFixed(0)} mts)`;
             document.getElementById('cost-connectors').textContent = `$${connectorsCost.toFixed(2)}`;
             document.getElementById('cost-power-adapters').textContent = `$${powerAdaptersCost.toFixed(2)}`;
             document.getElementById('cost-power-supply').textContent = `$${COSTS.powerSupply.toFixed(2)}`;
             document.getElementById('cost-labor').textContent = `$${laborCost.toFixed(2)}`;
             document.getElementById('cost-setup').textContent = `$${COSTS.setup.toFixed(2)}`;
             document.getElementById('cost-total').textContent = `$${totalCost.toFixed(2)}`;
-        }
+            document.getElementById('breakdown-list').innerHTML = breakdownHTML;
+        };
 
-        // Inicializar con algunas cámaras de ejemplo
         addCamera('wired');
         addCamera('wired');
-        updateCosts();
     });
     </script>
 </body>
