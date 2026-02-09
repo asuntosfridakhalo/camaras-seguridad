@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simulador de Costos de Cámaras de Seguridad V5.0</title>
+    <title>Simulador de Costos de Cámaras de Seguridad V6.0</title>
     <style>
         body { font-family: sans-serif; display: flex; flex-direction: column; align-items: center; background-color: #f0f2f5; margin: 0; padding: 20px; }
         h1, h2 { color: #333; text-align: center; }
@@ -29,6 +29,7 @@
         .text-label { font-size: 12px; font-family: sans-serif; fill: #000; pointer-events: none; }
         .dvr-label { font-size: 14px; font-weight: bold; fill: #c0392b; }
         .camera-group.dragging { opacity: 0.7; }
+        .camera-group.rotating .camera-icon { cursor: crosshair; }
         .camera-icon { font-size: 24px; cursor: grab; text-anchor: middle; dominant-baseline: middle; }
         .camera-icon:active { cursor: grabbing; }
         .camera-label { font-size: 14px; font-weight: bold; fill: #cc0000; pointer-events: none; }
@@ -38,7 +39,7 @@
     </style>
 </head>
 <body>
-    <h1>Simulador Interactivo de Cámaras (V5.0)</h1>
+    <h1>Simulador Interactivo de Cámaras (V6.0)</h1>
     <div id="controls-container">
         <button id="add-wired-cam">Añadir Alámbrica (🎥)</button>
         <button id="add-wireless-cam">Añadir Inalámbrica (📡)</button>
@@ -46,27 +47,17 @@
     <div id="main-container">
         <div id="svg-container">
             <svg id="plano-escuela" width="100%" viewBox="0 0 1000 650">
-                <!-- Perímetro Corregido Definitivo (Cuadrilátero Oblicuo) -->
                 <polygon class="perimeter" points="100,100 900,50 950,550 150,600" />
-
-                <!-- Edificios y Áreas Reubicados DENTRO del perímetro -->
                 <g id="school-layout">
                     <rect x="590" y="150" width="247" height="119" class="building" /><text x="650" y="200" class="text-label">Edificio Director</text>
                     <text x="610" y="220" class="dvr-label">DVR</text>
-                    
                     <rect x="550" y="330" width="255" height="111" class="building" /><text x="610" y="370" class="text-label">Edificio Secretaria</text>
-                    
                     <rect x="390" y="170" width="150" height="120" class="patio" /><text x="440" y="230" class="text-label">Patios</text>
-                    
                     <rect x="330" y="320" width="180" height="100" class="cancha" /><text x="380" y="370" class="text-label">Cancha</text>
-                    
                     <rect x="200" y="480" width="60" height="40" class="bodeguita" /><text x="205" y="505" class="text-label">Bodeguita</text>
-                    
                     <rect x="850" y="80" width="40" height="40" class="cooperativa" /><text x="840" y="135" class="text-label">Acceso</text>
-                    
                     <polygon class="cooperativa" points="890,480 930,530 870,540" /><text x="860" y="560" class="text-label">Cooperativa</text>
                 </g>
-
                 <g id="cables-group"></g>
                 <g id="cameras-group"></g>
             </svg>
@@ -103,13 +94,12 @@
 
         let cameras = [];
         let nextCamId = 1;
-        const DVR_POSITION = { x: 610, y: 220 }; // Posición actualizada del DVR
+        const DVR_POSITION = { x: 610, y: 220 };
         const PIXELS_TO_METERS = 0.1;
         const CABLE_IN_KIT = 18;
-
         const COSTS = { kitBase: 3500, wiredCam: 500, wirelessCam: 750, cablePerMeter: 8.20, connectorsPerCam: 100, powerAdapter: 150, powerSupply: 850, laborPerCam: 750, setup: 1000 };
 
-        let selectedElement = null, offset;
+        let selectedElement = null, offset, rotatingElement = null;
 
         const getMousePosition = (evt) => {
             const CTM = svg.getScreenCTM();
@@ -119,7 +109,6 @@
         const startDrag = (evt) => {
             if (evt.target.classList.contains('camera-icon')) {
                 selectedElement = evt.target.parentNode;
-                selectedElement.classList.add('dragging');
                 offset = getMousePosition(evt);
                 const camData = cameras.find(c => c.id == selectedElement.dataset.id);
                 offset.x -= camData.x;
@@ -129,11 +118,20 @@
 
         const drag = (evt) => {
             if (selectedElement) {
+                selectedElement.classList.add('dragging');
                 evt.preventDefault();
                 const coord = getMousePosition(evt);
                 const camData = cameras.find(c => c.id == selectedElement.dataset.id);
                 camData.x = coord.x - offset.x;
                 camData.y = coord.y - offset.y;
+                render();
+            } else if (rotatingElement) {
+                evt.preventDefault();
+                const coord = getMousePosition(evt);
+                const camData = cameras.find(c => c.id == rotatingElement.dataset.id);
+                const dy = coord.y - camData.y;
+                const dx = coord.x - camData.x;
+                camData.angle = Math.atan2(dy, dx) * 180 / Math.PI;
                 render();
             }
         };
@@ -149,6 +147,23 @@
         svg.addEventListener('mousemove', drag);
         svg.addEventListener('mouseup', endDrag);
         svg.addEventListener('mouseleave', endDrag);
+
+        document.addEventListener('keydown', (evt) => {
+            if (evt.key.toLowerCase() === 'r') {
+                const hovered = document.querySelector('.camera-group:hover');
+                if (hovered && !rotatingElement) {
+                    rotatingElement = hovered;
+                    rotatingElement.classList.add('rotating');
+                }
+            }
+        });
+
+        document.addEventListener('keyup', (evt) => {
+            if (evt.key.toLowerCase() === 'r' && rotatingElement) {
+                rotatingElement.classList.remove('rotating');
+                rotatingElement = null;
+            }
+        });
 
         const addCamera = (type, x, y) => {
             cameras.push({ id: nextCamId++, type, x, y, angle: 0 });
@@ -251,9 +266,8 @@
             document.getElementById('breakdown-list').innerHTML = breakdownHTML;
         };
 
-        // Iniciar con dos cámaras de ejemplo en posiciones lógicas
-        addCamera('wired', 850, 100); // Cerca del acceso
-        addCamera('wired', 125, 580); // Esquina inferior izquierda
+        addCamera('wired', 850, 100);
+        addCamera('wired', 125, 580);
     });
     </script>
 </body>
