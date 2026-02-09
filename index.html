@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simulador de Costos de Cámaras de Seguridad</title>
+    <title>Simulador de Costos de Cámaras de Seguridad V2.0</title>
     <style>
         body {
             font-family: sans-serif;
@@ -60,89 +60,53 @@
         .patio { fill: #9e9e9e; stroke: #707070; stroke-width: 1; }
         .cancha { fill: #bdbdbd; stroke: #8d8d8d; stroke-width: 1; }
         .cooperativa { fill: #4caf50; stroke: #388e3c; stroke-width: 1; }
-        .bodeguita { fill: #ff9800; stroke: #c66900; stroke-width: 1; opacity: 0.7;}
+        .bodeguita { fill: #ff9800; stroke: #c66900; opacity: 0.7;}
         .unbuilt { fill: #fafafa; }
-        .perimeter { fill: none; stroke: #333; stroke-width: 1; stroke-dasharray: 10,5; }
+        .perimeter { fill: none; stroke: #333; stroke-width: 2; }
         .text-label { font-size: 12px; font-family: sans-serif; fill: #000; }
         .dvr-label { font-size: 10px; font-weight: bold; }
-        .camera-icon { font-size: 20px; cursor: pointer; }
+        .camera-icon { font-size: 20px; cursor: grab; }
+        .camera-label { font-size: 14px; font-weight: bold; fill: #000; }
         .vision-cone { fill: #03a9f4; fill-opacity: 0.4; stroke: #0288d1; stroke-width: 1; }
     </style>
 </head>
 <body>
-    <h1>Simulador de Cámaras - Primaria Frida Kahlo</h1>
+    <h1>Simulador de Cámaras - Primaria Frida Kahlo (V2.0)</h1>
     <div id="container">
         <div id="svg-container">
             <svg id="plano-escuela" width="100%" viewBox="0 0 1000 650">
-                <!-- Perímetro -->
-                <polygon class="perimeter" points="50,50 950,50 850,600 150,600 50,50" />
+                <!-- Perímetro Corregido (Basado en foto satelital) -->
+                <polygon class="perimeter" points="150,50 900,150 800,600 100,500 150,50" />
 
-                <!-- Área sin construcción -->
-                <text x="150" y="150" class="text-label">Área sin construcción</text>
+                <!-- Edificios y Áreas (Ajustados al nuevo perímetro) -->
+                <rect x="550" y="200" width="247" height="119" class="building" />
+                <text x="610" y="250" class="text-label">Edificio de aulas y</text>
+                <text x="610" y="265" class="text-label">oficina del director</text>
+                <text x="570" y="270" class="dvr-label">DVR</text>
 
-                <!-- Edificios y Áreas -->
-                <rect x="550" y="100" width="247" height="119" class="building" />
-                <text x="610" y="150" class="text-label">Edificio de aulas y</text>
-                <text x="610" y="165" class="text-label">oficina del director</text>
-                <text x="570" y="170" class="dvr-label">DVR</text>
-
-                <rect x="500" y="380" width="305" height="111" class="building" />
+                <rect x="500" y="380" width="255" height="111" class="building" />
                 <text x="560" y="420" class="text-label">Edificio de aulas y</text>
                 <text x="560" y="435" class="text-label">oficina de la secretaria</text>
-                <text x="700" y="440" class="dvr-label">DVR</text>
+                <text x="650" y="440" class="dvr-label">DVR</text>
 
-                <rect x="350" y="120" width="150" height="120" class="patio" />
-                <text x="400" y="180" class="text-label">Patios</text>
+                <rect x="350" y="220" width="150" height="120" class="patio" />
+                <text x="400" y="280" class="text-label">Patios</text>
 
-                <rect x="300" y="280" width="180" height="100" class="cancha" />
-                <text x="330" y="320" class="text-label">Cancha con</text>
-                <text x="330" y="335" class="text-label">techumbre</text>
+                <rect x="250" y="350" width="180" height="100" class="cancha" />
+                <text x="280" y="390" class="text-label">Cancha con</text>
+                <text x="280" y="405" class="text-label">techumbre</text>
 
-                <rect x="200" y="400" width="60" height="40" class="bodeguita" />
-                <text x="205" y="425" class="text-label">Bodeguita</text>
+                <rect x="150" y="400" width="60" height="40" class="bodeguita" />
+                <text x="155" y="425" class="text-label">Bodeguita</text>
 
-                <rect x="820" y="280" width="30" height="30" class="cooperativa" />
-                <text x="810" y="325" class="text-label">Acceso</text>
+                <rect x="850" y="160" width="40" height="40" class="cooperativa" />
+                <text x="860" y="215" class="text-label">Acceso</text>
                 
-                <rect x="800" y="500" width="40" height="50" class="cooperativa" transform="rotate(-15, 820, 525)"/>
-                <text x="790" y="570" class="text-label">Cooperativa</text>
+                <rect x="760" y="500" width="30" height="40" class="cooperativa"/>
+                <text x="750" y="555" class="text-label">Cooperativa</text>
 
-                <!-- Dimensiones -->
-                <text x="450" y="40" class="text-label">100 mts</text>
-                <text x="10" y="325" class="text-label" transform="rotate(-90, 10, 325)">64.33 mts</text>
-
-                <!-- Cámaras y Conos de Visión (Escenario 1: 6 Cámaras) -->
-                <g id="cameras-group">
-                    <!-- Cam 1: Acceso Principal -->
-                    <path class="vision-cone" d="M 805 280 L 715 240 L 715 320 Z" transform="rotate(15, 805, 280)"/>
-                    <text x="805" y="280" class="camera-icon">🎥</text>
-                    <text x="810" y="270" class="text-label">1</text>
-
-                    <!-- Cam 2: Esquina Perimetral Izq. -->
-                    <path class="vision-cone" d="M 100 80 L 280 20 L 280 140 Z" />
-                    <text x="100" y="80" class="camera-icon">🎥</text>
-                    <text x="105" y="70" class="text-label">2</text>
-
-                    <!-- Cam 3: Esquina Perimetral Der. -->
-                    <path class="vision-cone" d="M 900 550 L 720 610 L 720 490 Z" />
-                    <text x="900" y="550" class="camera-icon">🎥</text>
-                    <text x="905" y="540" class="text-label">3</text>
-
-                    <!-- Cam 4: Patio y Cancha -->
-                    <path class="vision-cone" d="M 550 200 L 370 140 L 370 260 Z" />
-                    <text x="550" y="200" class="camera-icon">🎥</text>
-                    <text x="555" y="190" class="text-label">4</text>
-
-                    <!-- Cam 5: Pasillo Edificio Director -->
-                    <path class="vision-cone" d="M 550 219 L 480 320 L 620 320 Z" />
-                    <text x="550" y="219" class="camera-icon">🎥</text>
-                    <text x="555" y="214" class="text-label">5</text>
-
-                    <!-- Cam 6: Pasillo Edificio Secretaria -->
-                    <path class="vision-cone" d="M 500 430 L 430 330 L 570 330 Z" />
-                    <text x="500" y="430" class="camera-icon">🎥</text>
-                    <text x="505" y="425" class="text-label">6</text>
-                </g>
+                <!-- Grupo para renderizar cámaras con JS -->
+                <g id="cameras-group"></g>
             </svg>
         </div>
         <div id="info-container">
@@ -190,5 +154,67 @@
             </table>
         </div>
     </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const cameras = [
+                { id: 1, x: 860, y: 180, angle: 180 }, // Acceso Principal
+                { id: 2, x: 150, y: 70, angle: 45 },  // Esquina superior izquierda
+                { id: 3, x: 100, y: 480, angle: 0 },   // Perímetro izquierdo (calle)
+                { id: 4, x: 525, y: 180, angle: 135 }, // Vértice entre edificios y perímetro superior
+                { id: 5, x: 880, y: 380, angle: 225 }, // Perímetro derecho (calle)
+                { id: 6, x: 780, y: 580, angle: 315 }  // Esquina inferior derecha
+            ];
+
+            const svg = document.getElementById('plano-escuela');
+            const group = document.getElementById('cameras-group');
+            const visionAngle = 110; // 110 grados
+            const visionRadius = 200; // 200 unidades SVG ~ 20 mts
+
+            // Función para convertir de grados a radianes
+            const toRadians = (degrees) => degrees * Math.PI / 180;
+
+            cameras.forEach(cam => {
+                // Crear el grupo para cada cámara
+                const camGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g' );
+
+                // Crear el cono de visión
+                const cone = document.createElementNS('http://www.w3.org/2000/svg', 'path' );
+                const startAngle = toRadians(cam.angle - visionAngle / 2);
+                const endAngle = toRadians(cam.angle + visionAngle / 2);
+
+                const x1 = cam.x + visionRadius * Math.cos(startAngle);
+                const y1 = cam.y + visionRadius * Math.sin(startAngle);
+                const x2 = cam.x + visionRadius * Math.cos(endAngle);
+                const y2 = cam.y + visionRadius * Math.sin(endAngle);
+
+                const d = `M ${cam.x} ${cam.y} L ${x1} ${y1} A ${visionRadius} ${visionRadius} 0 0 1 ${x2} ${y2} Z`;
+                cone.setAttribute('d', d);
+                cone.setAttribute('class', 'vision-cone');
+                camGroup.appendChild(cone);
+
+                // Crear el icono de la cámara
+                const icon = document.createElementNS('http://www.w3.org/2000/svg', 'text' );
+                icon.setAttribute('x', cam.x);
+                icon.setAttribute('y', cam.y);
+                icon.setAttribute('class', 'camera-icon');
+                icon.setAttribute('text-anchor', 'middle');
+                icon.setAttribute('dominant-baseline', 'middle');
+                icon.textContent = '🎥';
+                camGroup.appendChild(icon);
+
+                // Crear la etiqueta con el número
+                const label = document.createElementNS('http://www.w3.org/2000/svg', 'text' );
+                label.setAttribute('x', cam.x + 15);
+                label.setAttribute('y', cam.y - 15);
+                label.setAttribute('class', 'camera-label');
+                label.textContent = cam.id;
+                camGroup.appendChild(label);
+                
+                group.appendChild(camGroup);
+            });
+        });
+    </script>
 </body>
 </html>
+
